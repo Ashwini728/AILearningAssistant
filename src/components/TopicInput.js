@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const TopicInput = ({ setTopic, setNotes }) => {
+const TopicInput = ({ setTopic, setNotes , setQuiz }) => {
   const [input, setInput] = useState('');
   const navigate = useNavigate();
 
