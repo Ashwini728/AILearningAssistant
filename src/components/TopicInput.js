@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 
-const TopicInput = ({ setTopic, setNotes, setQuiz }) => {
+const TopicInput = ({ setTopic, setNotes }) => {
   const [input, setInput] = useState('');
   const { transcript, listening, resetTranscript } = useSpeechRecognition();
 
@@ -14,9 +14,10 @@ const TopicInput = ({ setTopic, setNotes, setQuiz }) => {
     resetTranscript();
 
     try {
-      const res = await axios.post('http://localhost:5000/api/generate', { topic: finalTopic });
+      const res = await axios.post('https://6eb5-34-168-194-236.ngrok-free.app/generate-notes', {
+        topic: finalTopic,
+      });
       setNotes(res.data.notes);
-      setQuiz(res.data.quiz);
     } catch (error) {
       console.error('Error generating content:', error);
     }
