@@ -1,38 +1,39 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { useNavigate } from 'react-router-dom';
 
 const TopicInput = ({ setTopic, setNotes, setQuiz }) => {
   const [input, setInput] = useState('');
-  const { transcript, listening, resetTranscript } = useSpeechRecognition();
+  const navigate = useNavigate();
 
-  const handleSubmit = async () => {
-    const finalTopic = input || transcript;
-    if (!finalTopic) return;
-
-    setTopic(finalTopic);
-    resetTranscript();
+  const handleGenerate = async () => {
+    if (!input) return;
+    setTopic(input);
 
     try {
-      const res = await axios.post('http://localhost:5000/api/generate', { topic: finalTopic });
+      const res = await axios.post('http://localhost:5000/api/generate', { topic: input });
       setNotes(res.data.notes);
       setQuiz(res.data.quiz);
-    } catch (error) {
-      console.error('Error generating content:', error);
+    } catch (err) {
+      console.error('API error:', err);
     }
   };
 
+  const handleQuiz = async () => {
+    await handleGenerate();
+    navigate('/quiz');
+  };
+
   return (
-    <div>
+    <div style={{ marginBottom: '20px' }}>
       <input
         type="text"
-        placeholder="Enter or speak topic..."
+        placeholder="Enter a topic..."
         value={input}
         onChange={(e) => setInput(e.target.value)}
       />
-      <button onClick={handleSubmit}>Generate</button>
-      <button onClick={SpeechRecognition.startListening}>🎙️ Speak</button>
-      {listening && <p>Listening...</p>}
+      <button onClick={handleGenerate}>Generate</button>
+      <button onClick={handleQuiz}>Quiz</button>
     </div>
   );
 };

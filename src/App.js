@@ -1,9 +1,11 @@
+
 import React, { useState } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import './App.css';
 import TopicInput from './components/TopicInput';
 import NotesDisplay from './components/NotesDisplay';
 import QuizSection from './components/QuizSection';
 import ResultDisplay from './components/ResultDisplay';
-import './App.css';
 
 function App() {
   const [topic, setTopic] = useState('');
@@ -16,23 +18,36 @@ function App() {
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
 
   return (
-    <div className={`App ${theme}`}>
-      <div className="top-bar">
-        <button className="theme-toggle" onClick={toggleTheme}>
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-      </div>
+    <Router>
+      <div className={`App ${theme}`}>
+        <div className="top-bar">
+          <button className="theme-toggle" onClick={toggleTheme}>
+            {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
+          </button>
+        </div>
 
-      <div className="main-content">
-        <h1>AI Learning Assistant</h1>
-        <p className="subtitle">Transforming Curiosity into Knowledge with Every Click.</p>
-        <TopicInput setTopic={setTopic} setNotes={setNotes} setQuiz={setQuiz} />
-      </div>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <div className="main-content">
+                <h1>AI Learning Assistant</h1>
+                <p className="subtitle">Transforming Curiosity into Knowledge with Every Click.</p>
+                <TopicInput setTopic={setTopic} setNotes={setNotes} setQuiz={setQuiz} />
+                {notes && <NotesDisplay notes={notes} />}
+              </div>
+            }
+          />
+          <Route
+            path="/quiz"
+            element={<QuizSection quiz={quiz} setScore={setScore} />}
+          />
+        </Routes>
 
-      {notes && <NotesDisplay notes={notes} />}
-      {quiz.length > 0 && <QuizSection quiz={quiz} setScore={setScore} />}
-      {score !== null && <ResultDisplay score={score} />}
-    </div>
+        {/* Always display result if present */}
+        {score !== null && <ResultDisplay score={score} />}
+      </div>
+    </Router>
   );
 }
 
