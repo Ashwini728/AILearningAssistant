@@ -1,60 +1,77 @@
 // server.js
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import dotenv from "dotenv";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import express from 'express';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import dotenv from 'dotenv';
+import OpenAI from 'openai';
 
 dotenv.config();
-
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-app.post("/generate-quiz", async (req, res) => {
-  const { topic } = req.body;
+app.post('/generate-quiz', async (req, res) => {
+  const { topic, numQuestions, difficulty } = req.body;
 
-  if (!topic) {
-    return res.status(400).json({ error: "Missing topic" });
+  if (!topic?.trim()) {
+    return res.status(400).json({ error: 'Please enter a quiz topic.' });
   }
 
-  try {
-    const model = genAI.getGenerativeModel({
-      model: "models/gemini-1.5-pro-latest",
-    });
+  const prompt = `
+You are an AI quiz generator. Generate exactly ${numQuestions} multiple-choice questions (MCQs) on the topic "${topic}" with "${difficulty}" level difficulty.
 
-    const prompt = `
-Generate a JSON array of 10 multiple choice questions on the topic "${topic}". Each question must include:
-- a "question"
-- an array of 4 "options"
-- a string "answer" (correct one)
+Each question must include:
+- type: "mcq"
+- question (as a string)
+- 4 options (array of strings)
+- answer (must match one of the 4 options)
+- explanation
 
-Format strictly as JSON array only. Example:
+Return the result as a valid JSON array like:
 [
   {
+    "type": "mcq",
     "question": "What is ...?",
     "options": ["A", "B", "C", "D"],
-    "answer": "B"
+    "answer": "B",
+    "explanation": "Because..."
   },
   ...
 ]
+Only include the JSON array — no extra text.
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response.text();
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+    });
 
-    const quiz = JSON.parse(response);
+    const raw = response.choices[0].message.content;
+    let quiz = JSON.parse(raw);
+
+    // 🔒 Filter out any question without valid structure
+    quiz = quiz.filter(q =>
+      q.type === 'mcq' &&
+      q.question &&
+      Array.isArray(q.options) &&
+      q.options.length === 4 &&
+      q.options.includes(q.answer) &&
+      q.explanation
+    );
+
     res.json({ quiz });
   } catch (error) {
-    console.error("Gemini error:", error);
-    res.status(500).json({ error: "Failed to generate quiz." });
+    console.error('OpenAI error:', error);
+    res.status(500).json({ error: 'Failed to generate quiz.' });
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`✅ Server running on http://localhost:${PORT}`));

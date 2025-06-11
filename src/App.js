@@ -3,21 +3,16 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 import TopicInput from './components/TopicInput';
 import NotesDisplay from './components/NotesDisplay';
-import QuizSection from './components/QuizSection';
 import ResultDisplay from './components/ResultDisplay';
+import QuizPage from './pages/QuizPage';
 
 function App() {
-  const [, setTopic] = useState('');
   const [notes, setNotes] = useState('');
-  const [, setQuiz] = useState([]);
   const [score, setScore] = useState(null);
   const [theme, setTheme] = useState('light');
-  
 
   const toggleTheme = () =>
     setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-
-
 
   return (
     <Router>
@@ -38,24 +33,22 @@ function App() {
                 <p className="subtitle">
                   Transforming Curiosity into Knowledge with Every Click.
                 </p>
-                <TopicInput setTopic={setTopic} setNotes={setNotes} setQuiz={setQuiz} />
+                <TopicInput setNotes={setNotes} />
                 {notes && <NotesDisplay notes={notes} />}
               </div>
             }
           />
 
-          {/* Quiz Route */}
+          {/* New Quiz Route using Revamped QuizPage */}
           <Route
             path="/quiz"
             element={
-              <QuizSection
-                setScore={setScore}
-              />
+              <QuizPage setScore={setScore} />
             }
           />
         </Routes>
 
-        {/* Show Result Always if Present */}
+        {/* Show Result Summary if Quiz Score Exists */}
         {score !== null && <ResultDisplay score={score} />}
       </div>
     </Router>
